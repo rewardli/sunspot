@@ -1,16 +1,16 @@
 module Sunspot #:nodoc:
   module Rails #:nodoc:
-    # 
+    #
     # This module provides Sunspot Adapter implementations for ActiveRecord
     # models.
     #
     module Adapters
       class ActiveRecordInstanceAdapter < Sunspot::Adapters::InstanceAdapter
-        # 
+        #
         # Return the primary key for the adapted instance
         #
         # ==== Returns
-        # 
+        #
         # Integer:: Database ID of model
         #
         def id
@@ -34,8 +34,8 @@ module Sunspot #:nodoc:
           value = value.join(', ') if value.respond_to?(:join)
           @select = value
         end
-        
-        # 
+
+        #
         # Get one ActiveRecord instance out of the database by ID
         #
         # ==== Parameters
@@ -45,14 +45,12 @@ module Sunspot #:nodoc:
         # ==== Returns
         #
         # ActiveRecord::Base:: ActiveRecord model
-        # 
+        #
         def load(id)
-          @clazz.first(options_for_find.merge(
-            :conditions => { @clazz.primary_key => id}
-          ))
+          base_relation.where(@clazz.primary_key => id).first
         end
 
-        # 
+        #
         # Get a collection of ActiveRecord instances out of the database by ID
         #
         # ==== Parameters
@@ -64,18 +62,16 @@ module Sunspot #:nodoc:
         # Array:: Collection of ActiveRecord models
         #
         def load_all(ids)
-          @clazz.all(options_for_find.merge(
-            :conditions => { @clazz.primary_key => ids.map { |id| id }}
-          ))
+          base_relation.where(@clazz.primary_key => ids.map { |id| id }).to_a
         end
-        
+
         private
-        
-        def options_for_find
-          options = {}
-          options[:include] = @include unless @include.blank?
-          options[:select]  =  @select unless  @select.blank?
-          options
+
+        def base_relation
+          relation = @clazz
+          relation = relation.includes(@include) unless @include.blank?
+          relation = relation.select(@select)    unless  @select.blank?
+          relation
         end
       end
     end
